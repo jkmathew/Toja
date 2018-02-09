@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>#import("title") | Toja</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="/styles/skelton/normalize.css" />
+        <link rel="stylesheet" href="/styles/app/app.css" />
+        <link rel="stylesheet" href="/styles/skelton/skeleton.css" />
+        <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="two columns">&nbsp;</div>
+            <div class="eight columns">
+            #import("body")
+            </div>
+            <div class="two columns">&nbsp;</div>
+        </div>
+        #import("scripts")
+    </body>
+    
+</html>

@@ -1,0 +1,33 @@
+#extend("base")
+#export("title") {
+Add new build
+}
+
+#export("body") {
+
+<div class="row">
+    <div class="u-full-width">
+        <h4>Add new build</h4>
+    </div>
+</div>
+
+<form action="/build/upload" method="post" enctype="multipart/form-data">
+    <div class="row">
+        <label>Build</label>
+        <div class="buildDropArea" data-text="Select ipa file!">
+            <input type="file" name="build"/>
+        </div>
+    </div>
+    <div class="row">
+            <label>What is new in this version?</label>
+            <textarea name="releaseNotes" class="u-full-width" rows="4" cols="50"></textarea>
+    </div>
+    <div class="row">
+        <label>Notes</label>
+        <textarea name="specialNotes" class="u-full-width" rows="4" cols="50"></textarea>
+    </div>
+    <div class="row">
+            <input class="button-primary u-full-width" type="submit" value="Save" />
+    </div>
+</form>
+}
