@@ -20,14 +20,20 @@ public final class BuildController {
     
     func addRoutes() {
         let buildGroup = droplet.grouped("build")
+        buildGroup.get(Build.parameter, handler: installView)
+        
         let addGroup = buildGroup.grouped("upload")
         addGroup.get(handler: uploadBuildView)
         addGroup.post(handler: uploadBuild)
     }
     
+    func installView(_ request: Request) -> ResponseRepresentable {
+        let build = request.parameters.next(Build.self)
+        return build
+    }
+    
     func uploadBuildView(_ request: Request) throws -> ResponseRepresentable {
-//        var json = JSON()
-//        return try droplet.view.make("addBuild", json)
+
         return try droplet.view.make("uploadBuild")
     }
     
@@ -46,7 +52,7 @@ public final class BuildController {
             let suggestedFixes = ["Set MANIFEST_API_BASE_URL environment variable to manifest api url",
                                   "Provide env.manifest_api parameter for --configs flag in run command"]
             throw Abort(.badRequest, reason: "No manifest api url provided",
-                suggestedFixes: suggestedFixes)
+                        suggestedFixes: suggestedFixes)
         }
         let addManifestURL = baseUrl + "/build"
 //        let build = Build()
