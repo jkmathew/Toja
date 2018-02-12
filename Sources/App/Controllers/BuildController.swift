@@ -8,6 +8,7 @@
 import Foundation
 import Vapor
 import HTTP
+import ZIPFoundation
 
 public final class BuildController {
     
@@ -33,7 +34,6 @@ public final class BuildController {
     }
     
     func uploadBuildView(_ request: Request) throws -> ResponseRepresentable {
-
         return try droplet.view.make("uploadBuild")
     }
     
@@ -41,6 +41,7 @@ public final class BuildController {
         guard let file = request.formData?["build"] else {
             throw Abort(.badRequest, reason: "No file in request")
         }
+        
         let fileBytes = file.part.body
         guard fileBytes.count > 0 else {
             throw Abort(.badRequest, reason: "No file in request")
@@ -49,14 +50,15 @@ public final class BuildController {
         let specialNotes = request.data[Build.Keys.specialNotes]?.string ?? ""
         
         guard let baseUrl = droplet.config["env", "manifest_api"]?.string else {
-            let suggestedFixes = ["Set MANIFEST_API_BASE_URL environment variable to manifest api url",
-                                  "Provide env.manifest_api parameter for --configs flag in run command"]
-            throw Abort(.badRequest, reason: "No manifest api url provided",
-                        suggestedFixes: suggestedFixes)
+
+            let fix1 = "Add env.json and set manifest_api key or MANIFEST_API_BASE_URL environment variable to manifest api url"
+            let fix2 = "Provide env.manifest_api parameter for --configs flag in run command"
+            let suggestedFixes = [fix1, fix2]
+            throw Abort(.notAcceptable, reason: "No manifest api url provided", suggestedFixes: suggestedFixes)
         }
         let addManifestURL = baseUrl + "/build"
 //        let build = Build()
-        var postJSON = try saveIPA(fileBytes)
+        var postJSON = try saveIPA(fileBytes, baseURI: request.uri.baseURI)
         
         /*
          {
@@ -78,10 +80,32 @@ public final class BuildController {
         return response
     }
     
-    func saveIPA(_ fileBytes: Bytes) throws -> JSON {
+    func saveIPA(_ fileBytes: Bytes, baseURI: String) throws -> JSON {
+        let temp = NSTemporaryDirectory()
+        print(temp)
+        
+        let filemanager = FileManager.default
+        let fullFileURL = try filemanager.save(fileBytes, extension: "ipa")
+        let filePath = filemanager.relativePath(fullFileURL.path)
+        let destinationPath = temp + filePath
+        do {
+            try filemanager.unzipItem(at: fullFileURL, to: URL(fileURLWithPath: destinationPath))
+        } catch {
+            print("UnZIP archive failed with error:\(error)")
+        }
+        
+        let payloadPath = "\(destinationPath)/Payload"
+
+        let contents = try filemanager.contentsOfDirectory(atPath: payloadPath)
+        
+        guard let appFile = contents.first(where: { $0.hasSuffix(".app") }) else {
+            throw Abort(.notAcceptable, reason: "No .app found in payload", suggestedFixes: [])
+        }
+        let appPath = "\(payloadPath)/\(appFile)"
+        let plistPath = "\(appPath)/Info.plist"
         var postJSON = JSON()
 
-        try postJSON.set("build_url", "releaseNotes")
+        try postJSON.set("build_url", "\(baseURI)/\(filePath)")
         try postJSON.set("display_image", "specialNotes")
         try postJSON.set("full_size_image", "specialNotes")
         try postJSON.set("bundle_identifier", "specialNotes")

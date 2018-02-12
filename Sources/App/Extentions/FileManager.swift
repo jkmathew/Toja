@@ -10,22 +10,25 @@ import Foundation
 import Vapor
 
 extension FileManager {
-    func save(_ data: Bytes, filename: String? = nil, `extension`: String = "") throws -> String {
+    func relativePath(_ fullPath: String) -> String {
+        return fullPath.replacingOccurrences(of: workingDirectory() + "Public", with: "")
+    }
+    func save(_ data: Bytes, filename: String? = nil, `extension`: String = "") throws -> URL {
         let workPath = workingDirectory()
         
-        let name = filename ?? UUID().uuidString + `extension`
-        let imageFolder = "Public/uploads"
-        let imageDirectory = URL(fileURLWithPath: workPath).appendingPathComponent(imageFolder, isDirectory: true)
+        let name = filename ?? UUID().uuidString + (`extension`.count > 0 ? "." : "" ) + `extension`
+        let packageFolder = "Public/uploads"
+        let packageDirectory = URL(fileURLWithPath: workPath).appendingPathComponent(packageFolder, isDirectory: true)
         
-        if !fileExists(atPath: imageDirectory.path) {
+        if !fileExists(atPath: packageDirectory.path) {
             do {
-                try createDirectory(at: imageDirectory, withIntermediateDirectories: true, attributes: nil)
+                try createDirectory(at: packageDirectory, withIntermediateDirectories: true, attributes: nil)
             } catch {
-                let reason = "Unable to createdirectory \(imageDirectory). Underlying error \(error)"
+                let reason = "Unable to createdirectory \(packageDirectory). Underlying error \(error)"
                 throw Abort(.internalServerError, reason: reason)
             }
         }
-        let saveURL = imageDirectory.appendingPathComponent(name, isDirectory: false)
+        let saveURL = packageDirectory.appendingPathComponent(name, isDirectory: false)
         do {
             let data = Data(bytes: data)
             try data.write(to: saveURL)
@@ -33,6 +36,6 @@ extension FileManager {
             throw Abort(.internalServerError, reason: "Unable to write multipart form data to file. Underlying error \(error)")
         }
         
-        return saveURL.path.replacingOccurrences(of: workPath + "Public", with: "")
+        return saveURL
     }
 }
