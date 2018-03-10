@@ -13,11 +13,11 @@ extension FileManager {
     func relativePath(_ fullPath: String) -> String {
         return fullPath.replacingOccurrences(of: workingDirectory() + "Public", with: "")
     }
-    func save(_ data: Bytes, filename: String? = nil, `extension`: String = "") throws -> URL {
+    
+    func uploadsDirectory(subpath: String = "") throws -> URL {
         let workPath = workingDirectory()
         
-        let name = filename ?? UUID().uuidString + (`extension`.count > 0 ? "." : "" ) + `extension`
-        let packageFolder = "Public/uploads"
+        let packageFolder = "Public/uploads/" + subpath
         let packageDirectory = URL(fileURLWithPath: workPath).appendingPathComponent(packageFolder, isDirectory: true)
         
         if !fileExists(atPath: packageDirectory.path) {
@@ -28,6 +28,13 @@ extension FileManager {
                 throw Abort(.internalServerError, reason: reason)
             }
         }
+        return packageDirectory
+    }
+    
+    func save(_ data: Bytes, filename: String? = nil, `extension`: String = "") throws -> URL {
+        
+        let packageDirectory = try uploadsDirectory()
+        let name = filename ?? UUID().uuidString + (`extension`.count > 0 ? "." : "" ) + `extension`
         let saveURL = packageDirectory.appendingPathComponent(name, isDirectory: false)
         do {
             let data = Data(bytes: data)
@@ -37,5 +44,12 @@ extension FileManager {
         }
         
         return saveURL
+    }
+    
+    func copyToUploads(_ source: URL, fileName: String, subpath: String = "") throws -> URL {
+        let uploadsDirectory = try self.uploadsDirectory(subpath: subpath)
+        let destinationUrl = uploadsDirectory.appendingPathComponent(fileName)
+        try copyItem(at: source, to: destinationUrl)
+        return destinationUrl
     }
 }

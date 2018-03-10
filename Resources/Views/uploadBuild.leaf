@@ -2,7 +2,8 @@
 #export("title") {
 Add new build
 }
-
+#export("headContent") {
+}
 #export("body") {
 
 <div class="row">
@@ -11,7 +12,7 @@ Add new build
     </div>
 </div>
 
-<form action="/build/upload" method="post" enctype="multipart/form-data">
+<form id="uploadBuild" action="/build/upload" method="post" enctype="multipart/form-data">
     <div class="row">
         <label>Build</label>
         <div class="buildDropArea" data-text="Select ipa file!">
@@ -30,4 +31,5 @@ Add new build
             <input class="button-primary u-full-width" type="submit" value="Save" />
     </div>
 </form>
+
 }
